@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { DB } from '../../database/db.ts';
 import Needle from '../pages/Needle.tsx';
+import { log } from '../../utils.ts';
 
 const route = new Hono();
 
@@ -18,6 +19,7 @@ route.get('/:needle/:disposition?', async (ctx) => {
 	}
 
 	// Add support for Discord embed
+	log.info(`Request for needle: ${needle} with disposition: ${disposition}, user-agent: ${ctx.req.header('User-Agent')}`);
 	if (ctx.req.header('User-Agent')?.includes('discord') && !disposition) {
 		const embedHtml = `
 			<!DOCTYPE html>
