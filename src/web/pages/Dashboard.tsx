@@ -17,15 +17,15 @@ export default (user: User, uploads: Upload[]) => {
 						<h1 class='font-bold text-7xl'>Welcome, {user.name}</h1>
 						<div class='mt-8'>
 							<h2 class='font-bold text-4xl mb-4'>Your Files</h2>
-							<ul>
+							<div class='grid grid-cols-3 gap-4'>
 								{uploads.map((upload) => (
-									<li key={upload.sid} class='flex flex-col items-start mb-4'>
+									<div key={upload.sid} class='flex flex-col items-center p-4 border rounded dark:border-stone-700'>
 										<span class='dark:text-white'>{upload.filename}</span>
 										{upload.type.startsWith('image/') && (
 											<img
 												src={`/${upload.sid}/inline`}
 												alt={upload.filename}
-												class='mt-2 max-w-xs rounded border dark:border-stone-700'
+												class='mt-2 max-w-full rounded'
 											/>
 										)}
 										<button
@@ -44,9 +44,9 @@ export default (user: User, uploads: Upload[]) => {
 										>
 											Delete
 										</button>
-									</li>
+									</div>
 								))}
-							</ul>
+							</div>
 						</div>
 					</div>
 				</div>
