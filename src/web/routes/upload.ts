@@ -31,12 +31,31 @@ const generateShortId = async (options: {
 const route = new Hono();
 
 route.post('/', async (ctx) => {
-	// ! check authorization (! WILL BE CHANGED EVENTUALLY !)
-	const secretFile = join('data/.authorization');
-	if (await Bun.file(secretFile).exists()) {
-		const secret = (await Bun.file(secretFile).text()).trim();
-		if (!ctx.req.header('Authorization')) return ctx.text('Unauthorized', 401);
-		else if (ctx.req.header('Authorization') !== secret) return ctx.text('Forbidden', 403);
+	// Check for API key authentication first
+	const authHeader = ctx.req.header('Authorization');
+	let authenticatedUser = null;
+	
+	if (authHeader) {
+		// Try API key authentication
+		const apiKey = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+		authenticatedUser = DB.getUserByToken(apiKey);
+		
+		if (!authenticatedUser) {
+			// Fallback to legacy authorization file
+			const secretFile = join('data/.authorization');
+			if (await Bun.file(secretFile).exists()) {
+				const secret = (await Bun.file(secretFile).text()).trim();
+				if (authHeader !== secret) return ctx.text('Forbidden', 403);
+			} else {
+				return ctx.text('Forbidden', 403);
+			}
+		}
+	} else {
+		// No authorization header - check if legacy auth file exists
+		const secretFile = join('data/.authorization');
+		if (await Bun.file(secretFile).exists()) {
+			return ctx.text('Unauthorized', 401);
+		}
 	}
 
 	const body = await ctx.req.formData();
@@ -56,14 +75,15 @@ route.post('/', async (ctx) => {
 	// const stream = file.stream();
 
 	// Save file to disk
-	await Bun.write(join(location), await file.bytes());
-
-	// Save details to database
+	await Bun.write(join(location), await file.bytes());	// Save details to database
+	const userPreferences = authenticatedUser ? DB.getUserPreferences(authenticatedUser.uid) : {};
 	const upload: Upload = {
 		uid,
 		sid: await generateShortId({
-			method: ctx.req.header('x-yaass-sid-method') == 'gfycat' ? 'gfycat' : 'default',
-			size: 10,
+			method: ctx.req.header('x-yaass-sid-method') == 'gfycat' ? 'gfycat' : 
+					userPreferences.defaultSidMethod || 'default',
+			size: userPreferences.defaultSidSize || 10,
+			gfySize: userPreferences.defaultGfySize || 2,
 		}),
 		filename: file.name,
 		location,
@@ -71,7 +91,7 @@ route.post('/', async (ctx) => {
 		hash: hex(Bun.hash(await file.arrayBuffer()).toString()),
 		type: file.type,
 		size: file.size,
-		uploader_uid: '',
+		uploader_uid: authenticatedUser?.uid || '',
 	};
 	DB.putUpload(upload);
 

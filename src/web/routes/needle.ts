@@ -11,7 +11,6 @@ route.get('/:needle/:disposition?', async (ctx) => {
 
 	const upload = DB.getUpload(needle);
 	if (!upload) return ctx.notFound();
-
 	// * temporary condition to load inline images on discord
 	// todo: replace with the fancy embed thing i forgot the name of
 	if (ctx.req.header('User-Agent')?.includes('discord') && !disposition) {
@@ -19,6 +18,9 @@ route.get('/:needle/:disposition?', async (ctx) => {
 			return ctx.notFound();
 		}
 
+		// Get user preferences for embed customization
+		const userPreferences = DB.getUserPreferences(upload.uploader_uid);
+		
 		// Determine the appropriate og:type and meta tags based on file type
 		const isVideo = upload.type.startsWith('video/');
 		const isImage = upload.type.startsWith('image/');
@@ -52,20 +54,29 @@ route.get('/:needle/:disposition?', async (ctx) => {
 			`;
 		}
 
+		// Use user preferences for embed content with fallbacks
+		const embedTitle = userPreferences.embedTitle 
+			? userPreferences.embedTitle.replace('{filename}', upload.filename)
+			: upload.filename;
+		const embedDescription = userPreferences.embedDescription || "Meow fuck out the way";
+		const embedSiteName = userPreferences.embedSiteName || "Twink For Sale";
+		const embedColor = userPreferences.embedColor || "#f43f5e";
+
 		const embedHtml = `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<meta property="og:title" content="${upload.filename.replace(/"/g, '&quot;')}" />
-				<meta property="og:description" content="Meow fuck out the way" />
+				<meta property="og:title" content="${embedTitle.replace(/"/g, '&quot;')}" />
+				<meta property="og:description" content="${embedDescription.replace(/"/g, '&quot;')}" />
 				<meta property="og:url" content="${ctx.get('domain')}/${needle}" />
 				<meta property="og:type" content="${ogType}" />
-				<meta property="og:site_name" content="Twink For Sale" />
+				<meta property="og:site_name" content="${embedSiteName.replace(/"/g, '&quot;')}" />
+				<meta name="theme-color" content="${embedColor}" />
 				${mediaMetaTags}
 				<meta name="twitter:card" content="summary_large_image" />
-				<title>${upload.filename.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
+				<title>${embedTitle.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
 			</head>
 			<body>
 				<h1>Discord embed preview for ${upload.filename.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h1>

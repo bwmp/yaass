@@ -1,5 +1,5 @@
 import { Database } from 'bun:sqlite';
-import { log } from '../utils.ts';
+import { log, generateRandomString } from '../utils.ts';
 import type { Upload } from '../types/Upload.ts';
 import type { User } from '../types/User.ts';
 
@@ -88,6 +88,61 @@ export const DB = {
 		database.prepare(`SELECT * FROM users WHERE ',' || tokens || ',' LIKE ?;`).get(`%,${token},%`) as User,
 
 	getUsers: () => database.prepare(`SELECT * FROM USERS;`).all() as User[],
+
+	// API Key management
+	generateApiKey: (userUid: string) => {
+		const apiKey = generateRandomString(32);
+		const user = DB.getUser(userUid);
+		if (!user) throw new Error('User not found');
+		
+		const tokens = user.tokens ? user.tokens.split(',').filter(t => t) : [];
+		tokens.push(apiKey);
+		
+		database.prepare(`UPDATE users SET tokens = ? WHERE uid = ?;`).run(tokens.join(','), userUid);
+		return apiKey;
+	},
+
+	revokeApiKey: (userUid: string, apiKey: string) => {
+		const user = DB.getUser(userUid);
+		if (!user) throw new Error('User not found');
+		
+		const tokens = user.tokens ? user.tokens.split(',').filter(t => t && t !== apiKey) : [];
+		database.prepare(`UPDATE users SET tokens = ? WHERE uid = ?;`).run(tokens.join(','), userUid);
+	},
+
+	getUserApiKeys: (userUid: string) => {
+		const user = DB.getUser(userUid);
+		if (!user) return [];
+		return user.tokens ? user.tokens.split(',').filter(t => t) : [];
+	},
+
+	// User preferences management
+	updateUserPreferences: (userUid: string, preferences: Record<string, any>) => {
+		const user = DB.getUser(userUid);
+		if (!user) throw new Error('User not found');
+		
+		const currentMeta = user.meta ? JSON.parse(user.meta) : {};
+		const updatedMeta = { ...currentMeta, preferences };
+		
+		database.prepare(`UPDATE users SET meta = ? WHERE uid = ?;`).run(JSON.stringify(updatedMeta), userUid);
+	},
+
+	getUserPreferences: (userUid: string) => {
+		const user = DB.getUser(userUid);
+		if (!user) return {};
+		
+		const meta = user.meta ? JSON.parse(user.meta) : {};
+		return meta.preferences || {};
+	},
+
+	// Enhanced file management
+	getUserUploads: (userUid: string) => 
+		database.prepare(`SELECT * FROM uploads WHERE uploader_uid = ? ORDER BY timestamp DESC;`).all(userUid) as Upload[],
+
+	bulkDeleteUploads: (uploadUids: string[]) => {
+		const placeholders = uploadUids.map(() => '?').join(',');
+		database.prepare(`DELETE FROM uploads WHERE uid IN (${placeholders});`).run(...uploadUids);
+	},
 
 	debug: () => {
 		log.debug('database details');
