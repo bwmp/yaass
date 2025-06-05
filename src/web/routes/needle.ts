@@ -59,10 +59,10 @@ route.get('/:needle/:disposition?', async (ctx) => {
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<meta property="og:title" content="${upload.filename.replace(/"/g, '&quot;')}" />
-				<meta property="og:description" content="File uploaded to YAASS" />
+				<meta property="og:description" content="Meow fuck out the way" />
 				<meta property="og:url" content="${ctx.get('domain')}/${needle}" />
 				<meta property="og:type" content="${ogType}" />
-				<meta property="og:site_name" content="YAASS" />
+				<meta property="og:site_name" content="Twink For Sale" />
 				${mediaMetaTags}
 				<meta name="twitter:card" content="summary_large_image" />
 				<title>${upload.filename.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
