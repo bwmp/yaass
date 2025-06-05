@@ -21,6 +21,7 @@ route.get('/:needle/:disposition?', async (ctx) => {
 	// Add support for Discord embed
 	log.info(`Request for needle: ${needle} with disposition: ${disposition}, user-agent: ${ctx.req.header('User-Agent')}`);
 	if (ctx.req.header('User-Agent')?.includes('discord') && !disposition) {
+		log.info(`Serving Discord embed for needle: ${needle}`);
 		const embedHtml = `
 			<!DOCTYPE html>
 			<html lang="en">
