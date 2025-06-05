@@ -14,15 +14,20 @@ route.get('/:needle/:disposition?', async (ctx) => {
 
 	// * temporary condition to load inline images on discord
 	// todo: replace with the fancy embed thing i forgot the name of
-	if (ctx.req.header('User-Agent')?.includes('discord') && disposition != 'inline') {
-				const embedHtml = `
+	if (ctx.req.header('User-Agent')?.includes('discord') && !disposition) {
+		if (!upload) {
+			return ctx.notFound();
+		}
+
+		const embedHtml = `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
 				<meta property="og:title" content="${upload.filename}" />
 				<meta property="og:description" content="File uploaded to YAASS" />
-				<meta property="og:image" content="${ctx.get('domain')}/${upload.sid}/inline" />
+				<meta property="og:video" content="${ctx.get('domain')}/${upload.sid}/inline" />
 				<meta property="og:url" content="${ctx.get('domain')}/${needle}" />
+				<meta property="og:type" content="video.other" />
 			</head>
 			<body>
 				<p>Discord embed preview for ${upload.filename}</p>
