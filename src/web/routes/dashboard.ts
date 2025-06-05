@@ -17,8 +17,9 @@ route.get('/', async (ctx) => {
 	try {
 		const payload = await verify(token, await SECRET(), 'HS512') as JWTPayload;
 		const user = DB.getUser(payload.user);
+		const uploads = DB.getAllUploads();
 
-		return user ? ctx.html(Dashboard(user)) : unauthResponse();
+		return user ? ctx.html(Dashboard(user, uploads)) : unauthResponse();
 	} catch (ex) {
 		const err = ex as { name: string; message: string };
 		log.error(`error: ${err.name}\n${ex}`);

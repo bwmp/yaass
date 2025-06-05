@@ -20,21 +20,19 @@ export default (user: User, uploads: Upload[]) => {
 							<ul>
 								{uploads.map((upload) => (
 									<li key={upload.sid} class='flex items-center justify-between mb-4'>
-										<input
-											type='text'
-											value={upload.filename}
-											class='p-2 border rounded dark:bg-stone-700 dark:text-white'
-											onChange={(e) => {
-												const target = e.target as HTMLInputElement;
-												// Handle name change logic here
-												console.log(`Rename ${upload.sid} to`, target.value);
-											}}
-										/>
+										<span class='dark:text-white'>{upload.filename}</span>
 										<button
 											class='ml-4 p-2 bg-red-500 text-white rounded'
 											onClick={() => {
-												// Handle delete logic here
-												console.log(`Delete ${upload.sid}`);
+												fetch(`/delete/${upload.sid}`, { method: 'DELETE' })
+													.then((response) => {
+													if (response.ok) {
+														location.reload();
+													} else {
+														console.error('Failed to delete file');
+													}
+												})
+												.catch((error) => console.error('Error:', error));
 											}}
 										>
 											Delete

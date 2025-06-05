@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { join, WHO_AM_I } from '../../utils.ts';
+import deleteRoute from './delete.ts';
 
 const route = new Hono();
 
@@ -13,5 +14,7 @@ route.get('/', async (ctx) => {
 
 	return ctx.text(WHO_AM_I);
 });
+
+route.route('/delete', deleteRoute);
 
 export default route;

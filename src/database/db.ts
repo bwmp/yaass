@@ -64,6 +64,11 @@ export const DB = {
 	getUploads: (needle: string) =>
 		database.prepare(`SELECT * FROM uploads WHERE uploader_uid = ? OR filehash = ?;`).all(needle, needle) as Upload[],
 
+	getAllUploads: () => database.prepare(`SELECT * FROM uploads;`).all() as Upload[],
+
+	deleteUpload: (needle: string) =>
+		database.prepare(`DELETE FROM uploads WHERE uid = ? OR sid = ?;`).run(needle, needle),
+
 	createUser: (user: User) =>
 		database.prepare(`
 			INSERT INTO users (uid, name, username, passhash, tokens, owner, meta)
