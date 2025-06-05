@@ -15,14 +15,7 @@ route.get('/:needle/:disposition?', async (ctx) => {
 	// * temporary condition to load inline images on discord
 	// todo: replace with the fancy embed thing i forgot the name of
 	if (ctx.req.header('User-Agent')?.includes('discord') && disposition != 'inline') {
-		return ctx.redirect(ctx.get('domain').concat(`/${needle}/inline`));
-	}
-
-	// Add support for Discord embed
-	log.info(`Request for needle: ${needle} with disposition: ${disposition}, user-agent: ${ctx.req.header('User-Agent')}`);
-	if (ctx.req.header('User-Agent')?.includes('discord') && !disposition) {
-		log.info(`Serving Discord embed for needle: ${needle}`);
-		const embedHtml = `
+				const embedHtml = `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
