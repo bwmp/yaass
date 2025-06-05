@@ -17,6 +17,25 @@ route.get('/:needle/:disposition?', async (ctx) => {
 		return ctx.redirect(ctx.get('domain').concat(`/${needle}/inline`));
 	}
 
+	// Add support for Discord embed
+	if (ctx.req.header('User-Agent')?.includes('discord') && !disposition) {
+		const embedHtml = `
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta property="og:title" content="${upload.filename}" />
+				<meta property="og:description" content="File uploaded to YAASS" />
+				<meta property="og:image" content="${ctx.get('domain')}/${upload.sid}/inline" />
+				<meta property="og:url" content="${ctx.get('domain')}/${needle}" />
+			</head>
+			<body>
+				<p>Discord embed preview for ${upload.filename}</p>
+			</body>
+			</html>
+		`;
+		return ctx.html(embedHtml);
+	}
+
 	if (disposition == 'attachment' || disposition == 'inline') {
 		ctx.header('Content-Length', `${upload.size}`);
 		ctx.header('Content-Type', upload.type);
