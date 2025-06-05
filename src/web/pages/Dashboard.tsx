@@ -19,10 +19,17 @@ export default (user: User, uploads: Upload[]) => {
 							<h2 class='font-bold text-4xl mb-4'>Your Files</h2>
 							<ul>
 								{uploads.map((upload) => (
-									<li key={upload.sid} class='flex items-center justify-between mb-4'>
+									<li key={upload.sid} class='flex flex-col items-start mb-4'>
 										<span class='dark:text-white'>{upload.filename}</span>
+										{upload.type.startsWith('image/') && (
+											<img
+												src={`/${upload.sid}/inline`}
+												alt={upload.filename}
+												class='mt-2 max-w-xs rounded border dark:border-stone-700'
+											/>
+										)}
 										<button
-											class='ml-4 p-2 bg-red-500 text-white rounded'
+											class='mt-2 p-2 bg-red-500 text-white rounded'
 											onClick={() => {
 												fetch(`/delete/${upload.sid}`, { method: 'DELETE' })
 													.then((response) => {
