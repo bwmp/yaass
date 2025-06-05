@@ -4,7 +4,26 @@ import index from './routes/index.ts';
 const app = new Hono();
 
 // domain middleware
-app.use((ctx, next) => (ctx.set('domain', new URL(ctx.req.url).origin), next()));
+app.use((ctx, next) => {
+	const url = new URL(ctx.req.url);
+	
+	// Check for common proxy headers that indicate the original request was HTTPS
+	const forwardedProto = ctx.req.header('x-forwarded-proto');
+	const forwardedSsl = ctx.req.header('x-forwarded-ssl');
+	const proto = ctx.req.header('x-forwarded-protocol');
+	
+	// Determine if the original request was HTTPS
+	const isHttps = forwardedProto === 'https' || 
+					forwardedSsl === 'on' || 
+					proto === 'https' ||
+					url.protocol === 'https:';
+	
+	// Set the domain with the correct protocol
+	const domain = `${isHttps ? 'https' : 'http'}://${url.host}`;
+	ctx.set('domain', domain);
+	
+	return next();
+});
 
 // defaults
 app.route('/', index);
